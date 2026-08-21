@@ -55,12 +55,13 @@ jobs:
         working-directory: chalkbox
         run: pnpm build
 
-      - name: Prepare root-base build for browser verification
+      - name: Prepare original-style build for browser verification
         if: github.event_name == 'pull_request'
         working-directory: chalkbox
         run: |
           sed -i 's#base: "/chalkbox-claude-preview/"#base: "/"#' vite.config.ts
           sed -i 's#start_url: "/chalkbox-claude-preview/"#start_url: "/"#' vite.config.ts
+          sed -i 's/createHashRouter/createBrowserRouter/g' src/app/router.tsx
           pnpm build
 
       - name: Install Playwright Chromium for browser verification
