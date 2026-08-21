@@ -51,9 +51,17 @@ jobs:
         working-directory: chalkbox
         run: pnpm typecheck
 
-      - name: Build preview
+      - name: Build GitHub Pages preview
         working-directory: chalkbox
         run: pnpm build
+
+      - name: Prepare root-base build for browser verification
+        if: github.event_name == 'pull_request'
+        working-directory: chalkbox
+        run: |
+          sed -i 's#base: "/chalkbox-claude-preview/"#base: "/"#' vite.config.ts
+          sed -i 's#start_url: "/chalkbox-claude-preview/"#start_url: "/"#' vite.config.ts
+          pnpm build
 
       - name: Install Playwright Chromium for browser verification
         if: github.event_name == 'pull_request'
