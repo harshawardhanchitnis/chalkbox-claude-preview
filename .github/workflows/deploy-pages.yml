@@ -55,14 +55,16 @@ jobs:
         working-directory: chalkbox
         run: pnpm build
 
-      - name: Prepare original-style build for browser verification
+      - name: Adapt bundled E2E specs to GitHub Pages hash routes
         if: github.event_name == 'pull_request'
         working-directory: chalkbox
         run: |
-          sed -i 's#base: "/chalkbox-claude-preview/"#base: "/"#' vite.config.ts
-          sed -i 's#start_url: "/chalkbox-claude-preview/"#start_url: "/"#' vite.config.ts
-          sed -i 's/createHashRouter/createBrowserRouter/g' src/app/router.tsx
-          pnpm build
+          sed -i 's#page.goto("/")#page.goto("/chalkbox-claude-preview/")#g' tests/e2e/*.spec.ts
+          sed -i 's#page.goto("/demo")#page.goto("/chalkbox-claude-preview/#/demo")#g' tests/e2e/*.spec.ts
+          sed -i 's#page.goto("/privacy")#page.goto("/chalkbox-claude-preview/#/privacy")#g' tests/e2e/*.spec.ts
+          sed -i 's#page.goto("/app/settings")#page.goto("/chalkbox-claude-preview/#/app/settings")#g' tests/e2e/*.spec.ts
+          sed -i 's#"**/app"#"**/#/app"#g' tests/e2e/*.spec.ts
+          sed -i 's#"**/plans/**"#"**/#/app/plans/**"#g' tests/e2e/*.spec.ts
 
       - name: Install Playwright Chromium for browser verification
         if: github.event_name == 'pull_request'
