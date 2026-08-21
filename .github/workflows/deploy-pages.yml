@@ -55,6 +55,16 @@ jobs:
         working-directory: chalkbox
         run: pnpm build
 
+      - name: Install Playwright Chromium for browser verification
+        if: github.event_name == 'pull_request'
+        working-directory: chalkbox
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run browser E2E tests
+        if: github.event_name == 'pull_request'
+        working-directory: chalkbox
+        run: pnpm e2e
+
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
