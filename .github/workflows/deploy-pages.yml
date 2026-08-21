@@ -59,12 +59,22 @@ jobs:
         if: github.event_name == 'pull_request'
         working-directory: chalkbox
         run: |
-          sed -i 's#page.goto("/")#page.goto("/chalkbox-claude-preview/")#g' tests/e2e/*.spec.ts
-          sed -i 's#page.goto("/demo")#page.goto("/chalkbox-claude-preview/#/demo")#g' tests/e2e/*.spec.ts
-          sed -i 's#page.goto("/privacy")#page.goto("/chalkbox-claude-preview/#/privacy")#g' tests/e2e/*.spec.ts
-          sed -i 's#page.goto("/app/settings")#page.goto("/chalkbox-claude-preview/#/app/settings")#g' tests/e2e/*.spec.ts
-          sed -i 's#"**/app"#"**/#/app"#g' tests/e2e/*.spec.ts
-          sed -i 's#"**/plans/**"#"**/#/app/plans/**"#g' tests/e2e/*.spec.ts
+          python3 - <<'PY'
+          from pathlib import Path
+          replacements = {
+              'page.goto("/")': 'page.goto("/chalkbox-claude-preview/")',
+              'page.goto("/demo")': 'page.goto("/chalkbox-claude-preview/#/demo")',
+              'page.goto("/privacy")': 'page.goto("/chalkbox-claude-preview/#/privacy")',
+              'page.goto("/app/settings")': 'page.goto("/chalkbox-claude-preview/#/app/settings")',
+              'page.waitForURL("**/app")': 'page.waitForURL("**/#/app")',
+              'page.waitForURL("**/plans/**")': 'page.waitForURL("**/#/app/plans/**")',
+          }
+          for path in Path("tests/e2e").glob("*.spec.ts"):
+              text = path.read_text()
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text)
+          PY
 
       - name: Install Playwright Chromium for browser verification
         if: github.event_name == 'pull_request'
