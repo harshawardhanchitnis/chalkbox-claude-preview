@@ -1,0 +1,75 @@
+name: Build and deploy ChalkBox preview
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout preview repository
+        uses: actions/checkout@v4
+
+      - name: Extract Claude integration source
+        run: unzip -q ChalkBox_GitHubPages_Preview_Source.zip
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.5
+          run_install: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: chalkbox/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: chalkbox
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        working-directory: chalkbox
+        run: pnpm test
+
+      - name: Typecheck
+        working-directory: chalkbox
+        run: pnpm typecheck
+
+      - name: Build preview
+        working-directory: chalkbox
+        run: pnpm build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: chalkbox/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
