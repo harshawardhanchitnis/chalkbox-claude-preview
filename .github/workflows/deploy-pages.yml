@@ -51,9 +51,41 @@ jobs:
         working-directory: chalkbox
         run: pnpm typecheck
 
-      - name: Build preview
+      - name: Build GitHub Pages preview
         working-directory: chalkbox
         run: pnpm build
+
+      - name: Adapt bundled E2E specs to GitHub Pages hash routes
+        if: github.event_name == 'pull_request'
+        working-directory: chalkbox
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          replacements = {
+              'page.goto("/")': 'page.goto("/chalkbox-claude-preview/")',
+              'page.goto("/demo")': 'page.goto("/chalkbox-claude-preview/#/demo")',
+              'page.goto("/privacy")': 'page.goto("/chalkbox-claude-preview/#/privacy")',
+              'page.goto("/app/settings")': 'page.goto("/chalkbox-claude-preview/#/app/settings")',
+              'page.waitForURL("**/app")': 'page.waitForURL("**/#/app")',
+              'page.waitForURL("**/plans/**")': 'page.waitForURL("**/#/app/plans/**")',
+          }
+          for path in Path("tests/e2e").glob("*.spec.ts"):
+              text = path.read_text()
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text)
+          PY
+
+      - name: Install Playwright Chromium for browser verification
+        if: github.event_name == 'pull_request'
+        working-directory: chalkbox
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run browser E2E tests
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 4
+        working-directory: chalkbox
+        run: pnpm exec playwright test --timeout=15000 --retries=0 --workers=4
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
