@@ -7,7 +7,8 @@ Temporary isolated preview repository used only to build and test the Claude int
 - No private credentials or provider secrets are included.
 - Demo Mode uses prepared local IndexedDB data.
 - Verification build passed dependency install, unit tests, TypeScript typecheck, and production build.
+- GitHub Pages is enabled using GitHub Actions.
 
-Expected preview URL after GitHub Pages is enabled:
+Preview URL:
 
 `https://harshawardhanchitnis.github.io/chalkbox-claude-preview/`
