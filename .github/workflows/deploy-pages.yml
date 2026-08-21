@@ -71,8 +71,9 @@ jobs:
 
       - name: Run browser E2E tests
         if: github.event_name == 'pull_request'
+        timeout-minutes: 4
         working-directory: chalkbox
-        run: pnpm e2e
+        run: pnpm exec playwright test --timeout=15000 --retries=0 --workers=4
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
